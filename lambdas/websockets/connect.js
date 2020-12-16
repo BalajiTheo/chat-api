@@ -1,7 +1,8 @@
 const Dynamo = require('../common/dynamoHelper');
-
+const Responses = require('../common/apiResponse');
 
 const tableName = "ws_users";
+const roomTable = "ws_rooms";
 exports.handler = async event => {
 
     console.log("connection event at line 8");
@@ -11,26 +12,23 @@ exports.handler = async event => {
     console.log(event.requestContext);
     const {connectionId, domainName, stage} = event.requestContext;
 
-    const data = {
+    const {userid} = event.queryStringParameters;
 
-        id : connectionId,
+    if(!userid){
+      throw Error('Id not found');
+    }
+
+
+    const data = {
+        id: userid,
+        connectionId : connectionId,
         date : Date.now(),
-        messages : [],
         domainName,
         stage
     }
 
     await Dynamo.write(data, tableName);
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify(
-          {
-            message: 'Hi from server, you are succssfully connected',
+    return Responses._200({ message: 'connected' });  
 
-          },
-          null,
-          2
-        ),
-      };
 }

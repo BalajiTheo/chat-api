@@ -15,13 +15,16 @@ async get(id, tableName) {
         }
     }
 
+    console.log(params, "the parrams i passed");
+
     const data = await documentClient.get(params).promise();
 
-    if(!data || !data.item){
+    console.log("fetched data", data);
+    if(!data || !data.Item){
         throw Error("Cannot fetch messages");
     }
 
-    return data.item;
+    return data.Item;
 },
 
 async write(data, tableName) {
@@ -45,6 +48,64 @@ async write(data, tableName) {
     }
 
     return data;
+},
+
+async findRoom(roomid, tableName) {
+
+    const params = {
+        TableName : tableName,
+        Key : {
+            roomid
+        }
+    }
+
+    const response = await documentClient.get(params).promise();
+
+    if(response && response.Item) return response.Item;
+
+    return response;
+  
+},
+async createRoom(data, tableName) {
+
+console.log("came to create", data);
+    const roomData = {
+        TableName : tableName,
+        Item : data
+    }
+    const response = await documentClient.put(roomData).promise();
+
+    console.log("room created in Dynamo helper", response);
+    if(!response){
+        throw Error('cannot create room');
+    }
+
+    return response;
+},
+async addMessage(data, tableName){
+
+    const params = {
+        TableName: tableName,
+        Item : data
+    }
+    const response = await documentClient.put(params).promise();
+
+    return response;
+
+},
+
+async getReceiversId(tableName){
+
+    const params = {
+        TableName: tableName,
+        ProjectionExpression: "connectionId, domainName, stage", 
+    };
+
+    const result = await documentClient.scan(params).promise();
+
+    console.log("queried result", result);
+    return result;
+
 }
 
 

@@ -28,6 +28,7 @@ provider:
   websocketsApiRouteSelectionExpression: $request.body.action
   environment:
     DYNAMODB_TABLE: "ws_users"
+    DYNAMODB_ROOM_TABLE: "ws_rooms"
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -38,6 +39,19 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_ROOM_TABLE}"
+    - Effect: "Allow"
+      Action:
+        - "cloudformation:DescribeStackResource"
+      Resource: "*"
 
 # you can overwrite defaults here
 #  stage: dev
@@ -147,6 +161,22 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.DYNAMODB_TABLE}
+    WSDynamoDbRoomTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: roomid
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: roomid
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_ROOM_TABLE}
 #  Resources:
 #    NewResource:
 #      Type: AWS::S3::Bucket
